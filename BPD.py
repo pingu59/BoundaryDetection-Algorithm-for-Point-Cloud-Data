@@ -62,15 +62,29 @@ def cal_boundary(points, k=30, save_filename=None) :
     print(f'len : {len(boundary)}')
     print(f'{min_b}')
     print(f'{max_b}')
+    # Convert boundary to numpy array
+    boundary = np.array(boundary)
+    
+    # Create Open3D point cloud for visualization
     pc = o3d.geometry.PointCloud()
-    pc.points = o3d.utility.Vector3dVector(np.pad(np.array(boundary), (0, 1), 'constant', constant_values=0))
-
+    
+    # Check if points are 2D or 3D and handle accordingly
+    if boundary.shape[1] == 2:
+        # Convert 2D points to 3D by adding zero z-coordinate
+        boundary_3d = np.pad(boundary, ((0, 0), (0, 1)), 'constant', constant_values=0)
+        pc.points = o3d.utility.Vector3dVector(boundary_3d)
+    else:
+        # Already 3D points
+        pc.points = o3d.utility.Vector3dVector(boundary)
+    
+    # Color the boundary points (optional - makes them stand out)
+    pc.paint_uniform_color([1, 0, 0])  # Red color for boundary points
+    
+    # Visualize the boundary points
     o3d.visualization.draw_geometries([pc])
-    points = np.array(pc.points)
-    if save_filename != None :
+    
+    # Save to file if requested
+    if save_filename is not None:
+        np.savetxt(save_filename, boundary)
 
-        np.savetxt(save_filename, points[:, :2])
-
-    return points
-
-
+    return boundary

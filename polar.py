@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import random
 import Circle as C
 import open3d as o3d
-import alphashape
 from sklearn.neighbors import NearestNeighbors
+from sklearn.decomposition import PCA
 from itertools import combinations
 
 class Polar :
@@ -21,16 +21,42 @@ class Polar :
         self.bis = np.min(self.theta) + np.max(self.theta) / 2
 
     def cart2pol(self, center, points, show=False):
-        points -= center
-
-        x = points[:, 0]
-        y = points[:, 1]
-
-        r = np.sqrt(x ** 2 + y ** 2)
-        theta = np.arctan2(y, x)
-        if show :
-            print(r)
-            print(theta)
+        # Center the points
+        centered_points = points - center
+        
+        # For 2D points, use original method
+        if points.shape[1] == 2:
+            x = centered_points[:, 0]
+            y = centered_points[:, 1]
+            r = np.sqrt(x**2 + y**2)
+            theta = np.arctan2(y, x)
+        
+        # For 3D points, perform PCA to find optimal 2D plane
+        elif points.shape[1] == 3:
+            # Perform PCA to find the plane that best fits the points
+            pca = PCA(n_components=2)
+            projected_points = pca.fit_transform(centered_points)
+            
+            # Get the principal components for reference
+            self.pca_components = pca.components_
+            self.pca_explained_variance = pca.explained_variance_ratio_
+            
+            # Convert to polar coordinates in the PCA plane
+            x = projected_points[:, 0]
+            y = projected_points[:, 1]
+            r = np.sqrt(x**2 + y**2)
+            theta = np.arctan2(y, x)
+            
+            # Store PCA information for potential use
+            self.projected_points = projected_points
+            
+        else:
+            raise ValueError("Points must be 2D or 3D")
+        
+        if show:
+            print("Radii:", r)
+            print("Angles:", theta)
+        
         return r, theta
 
     def polar_normalize(self):
