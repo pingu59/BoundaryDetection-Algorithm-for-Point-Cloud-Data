@@ -1,7 +1,6 @@
 import plane_extractor
 import BPD
 import numpy as np
-import remove_wall
 import open3d as o3d
 
 def display_outlier(points, ind):
